@@ -3,55 +3,28 @@ package main
 import (
 	"flag"
 	"fmt"
-	"strings"
-
-	// "github.com/paraparata/wurl/ui"
 	"os"
 
-	"github.com/pb33f/libopenapi"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/paraparata/wurl/pkg/config"
+	"github.com/paraparata/wurl/pkg/ui"
 )
 
-var openapiPathFlag = flag.String("openapi", "openapi.yml", "List paths from an openapi file")
+var openapiPathFlag = flag.String("openapi", "", "List paths from an openapi file")
 
 func main() {
 	flag.Parse()
 
-	// load in the petstore sample OpenAPI specification
-	// into a byte slice.
-	petstore, _ := os.ReadFile(*openapiPathFlag)
-
-	// create a new Document from from the byte slice.
-	document, err := libopenapi.NewDocument(petstore)
-
-	// if anything went wrong, an error is thrown
+	store, err := os.ReadFile(*openapiPathFlag)
 	if err != nil {
-		panic(fmt.Sprintf("cannot create new document: %e", err))
+		panic(fmt.Sprintf("Error reading file: %e", err))
 	}
 
-	// because we know this is a v3 spec, we can build a ready to go model from it.
-	docModel, errors := document.BuildV3Model()
+	cfg := config.New(&store)
 
-	// if anything went wrong when building the v3 model, a slice of errors will be returned
-	if len(errors) > 0 {
-		for i := range errors {
-			fmt.Printf("error: %e\n", errors[i])
-		}
-		panic(fmt.Sprintf("cannot create v3 model from document: %d errors reported", len(errors)))
+	model := ui.New(cfg)
+	if _, err := tea.NewProgram(model, tea.WithAltScreen()).Run(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
 	}
-
-	for pathPairs := docModel.Model.Paths.PathItems.First(); pathPairs != nil; pathPairs = pathPairs.Next() {
-		pathName := pathPairs.Key()
-		pathItem := pathPairs.Value()
-		fmt.Printf("Path %s has %d operations\n", pathName, pathItem.GetOperations().Len())
-
-		for operations := pathItem.GetOperations().First(); operations != nil; operations = operations.Next() {
-			name := operations.Key()
-			fmt.Printf("> %s\n", strings.ToUpper(name))
-		}
-	}
-
-	// if _, err := ui.NewProgram().Run(); err != nil {
-	// 	fmt.Println("Error running program:", err)
-	// 	os.Exit(1)
-	// }
 }
