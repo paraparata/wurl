@@ -67,9 +67,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.activeView = listView
 			// m.list, cmd = m.list.Update(msg)
 			return m, nil
-		case "enter":
-			ep := m.list.SelectedItem().(components.EpListItem).Endpoint()
-			m.schema = *components.NewSchema(ep.Method, ep.Path)
+		case "o":
+			selected := m.list.SelectedItem().(components.EpListItem)
+			m.schema = *components.NewSchema(
+				selected.Title(),
+				selected.Description(),
+				selected.Endpoint())
 			m.activeView = schemaView
 			return m, nil
 		}

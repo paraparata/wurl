@@ -8,10 +8,11 @@ import (
 )
 
 type Endpoint struct {
-	ID     string
-	Method string
-	Desc   string
-	Path   string
+	ID        string
+	Method    string
+	Desc      string
+	Path      string
+	Operation *v3.Operation
 }
 
 type OpenApi struct {
@@ -59,7 +60,12 @@ func NewV3(store *[]byte) *OpenApi {
 				desc = operations.Value().Description
 			}
 
-			o.endpoints[i] = Endpoint{operations.Value().OperationId, method, desc, pathName}
+			o.endpoints[i] = Endpoint{
+				operations.Value().OperationId,
+				method,
+				desc,
+				pathName,
+				operations.Value()}
 			i += 1
 		}
 	}
