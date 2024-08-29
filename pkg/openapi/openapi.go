@@ -5,13 +5,59 @@ import (
 
 	"github.com/pb33f/libopenapi"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	renderer "github.com/pb33f/libopenapi/renderer"
 )
 
 type Endpoint struct {
-	ID     string
-	Method string
-	Desc   string
-	Path   string
+	ID        string
+	Method    string
+	Desc      string
+	Path      string
+	Operation *v3.Operation
+}
+
+func (e *Endpoint) GetReqExample() string {
+	mg := renderer.NewMockGenerator(renderer.JSON)
+	mg.SetPretty()
+	req := e.Operation.RequestBody
+	if req == nil {
+		return "N/A"
+	}
+
+	schemaModel := req.Content.GetOrZero("application/json")
+	if schemaModel == nil {
+		return "N/A"
+	}
+
+	schema := schemaModel.Schema.Schema()
+	mock, err := mg.GenerateMock(schema, "")
+	if err != nil {
+		return "N/A"
+	}
+
+	return string(mock)
+}
+
+func (e *Endpoint) GetResExample() string {
+	mg := renderer.NewMockGenerator(renderer.JSON)
+	mg.SetPretty()
+	res := e.Operation.Responses.FindResponseByCode(200)
+	if res == nil {
+		return "N/A"
+	}
+
+	schemaModel := res.Content.GetOrZero("application/json")
+	if schemaModel == nil {
+		return "N/A"
+	}
+
+	schema := schemaModel.Schema.Schema()
+	mock, err := mg.GenerateMock(schema, "")
+	if err != nil {
+		return "N/A"
+	}
+
+	return string(mock)
 }
 
 type OpenApi struct {
@@ -59,7 +105,12 @@ func NewV3(store *[]byte) *OpenApi {
 				desc = operations.Value().Description
 			}
 
-			o.endpoints[i] = Endpoint{operations.Value().OperationId, method, desc, pathName}
+			o.endpoints[i] = Endpoint{
+				operations.Value().OperationId,
+				method,
+				desc,
+				pathName,
+				operations.Value()}
 			i += 1
 		}
 	}
@@ -68,3 +119,17 @@ func NewV3(store *[]byte) *OpenApi {
 }
 
 func (o *OpenApi) GetEndpoints() *[]Endpoint { return &o.endpoints }
+
+// func (o *OpenApi) GetEndpointExample() string {
+// 	mg := renderer.NewMockGenerator(renderer.JSON)
+// 	mg.SetPretty()
+// 	schemaModel := o.model.Components.Schemas.GetOrZero("TtsJobRequest")
+// 	schema := schemaModel.Schema()
+// 	mock, err := mg.GenerateMock(schema, "")
+//
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	return string(mock)
+// }

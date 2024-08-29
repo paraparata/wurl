@@ -1,12 +1,11 @@
 package ui
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/paraparata/wurl/pkg/config"
+	"github.com/paraparata/wurl/pkg/eplist"
 	"github.com/paraparata/wurl/pkg/openapi"
 	"github.com/paraparata/wurl/pkg/ui/components"
 )
@@ -20,34 +19,37 @@ const (
 	schemaView
 )
 
+func (m *model) createList() tea.Cmd {
+	api := openapi.NewV3(&m.cfg.Store)
+	endpoints := api.GetEndpoints()
+	for i, ep := range *endpoints {
+		item := newItem(
+			&ep,
+			fmt.Sprintf("%s %s", components.EpMethod(ep.Method), ep.Path),
+			ep.Desc,
+		)
+		m.list.InsertItem(i, item)
+	}
+	m.onStartup = false
+	return func() tea.Msg {
+		return EndpointListLoadedMsg{}
+	}
+}
+
 type model struct {
-	*config.Config
+	cfg        *config.Config
 	list       list.Model
+	onStartup  bool
 	schema     components.SchemaModel
 	activeView view
 }
 
 func New(cfg *config.Config) *model {
 	m := &model{
-		Config:     cfg,
+		cfg:        cfg,
 		activeView: listView,
 	}
-
-	api := openapi.NewV3(m.Store)
-	endpoints := api.GetEndpoints()
-	items := make([]list.Item, len(*endpoints))
-	for i, ep := range *endpoints {
-		items[i] = components.NewEpListItem(
-			&ep,
-			fmt.Sprintf("%s %s", components.EpMethod(ep.Method), ep.Path),
-			ep.Desc,
-		)
-	}
-
-	delegate := components.NewEpListItemDelegate(components.NewDelegateEpListKeyMap())
-	operations := list.New(items, delegate, 0, 0)
-	operations.Title = "wurl"
-	m.list = operations
+	m.list = *eplist.New(m.cfg)
 
 	return m
 }
@@ -59,6 +61,13 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
+	case eplist.EndpointItemMsg:
+		m.schema = *components.NewSchema(
+			msg.Message.Title(),
+			msg.Message.Description(),
+			msg.Message.Endpoint())
+		m.activeView = schemaView
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -67,18 +76,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.activeView = listView
 			// m.list, cmd = m.list.Update(msg)
 			return m, nil
-		case "enter":
-			ep := m.list.SelectedItem().(components.EpListItem).Endpoint()
-			m.schema = *components.NewSchema(ep.Method, ep.Path)
-			m.activeView = schemaView
-			return m, nil
 		}
-	case tea.WindowSizeMsg:
-		h, v := uiStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-h, msg.Height-v)
 	}
 
-	m.list, cmd = m.list.Update(msg)
 	return m, cmd
 }
 

@@ -1,9 +1,10 @@
 package config
 
 type Config struct {
-	Store *[]byte
+	Store    []byte
+	PathFile string
 }
 
-func New(store *[]byte) *Config {
-	return &Config{store}
+func New(pathFile string) *Config {
+	return &Config{PathFile: pathFile}
 }
