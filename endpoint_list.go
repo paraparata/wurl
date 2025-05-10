@@ -24,8 +24,17 @@ func (i Endpoint) FilterValue() string {
 	return i.method + " " + i.path
 }
 
+type view int
+
+const (
+	listView view = iota
+	schemaView
+)
+
 type model struct {
-	list list.Model
+	list    list.Model
+	choice  Endpoint
+	current view
 }
 
 func NewEndpointList(title string, itemsLen int, items []Endpoint) *model {
@@ -46,8 +55,16 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if msg.String() == "ctrl+c" {
+		switch keypress := msg.String(); keypress {
+		case "ctrl+c":
 			return m, tea.Quit
+		case "enter":
+			if i, ok := m.list.SelectedItem().(Endpoint); ok {
+				m.choice = i
+				m.current = schemaView
+			}
+
+			return m, nil
 		}
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
@@ -60,5 +77,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	if m.current == schemaView {
+		return lipgloss.NewStyle().Margin(1, 0, 2, 4).Render(fmt.Sprintf("%s? Sounds good to me.", m.choice.Title()))
+	}
 	return docStyle.Render(m.list.View())
 }
