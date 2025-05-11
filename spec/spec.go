@@ -1,4 +1,4 @@
-package main
+package spec
 
 import (
 	"fmt"
@@ -9,43 +9,43 @@ import (
 )
 
 type Endpoint struct {
-	path      string
-	method    string
-	operation *v3.Operation
+	Path      string
+	Method    string
+	Operation *v3.Operation
 }
 
 type PayloadProperty struct {
 	// TODO: Add extensions and examples
 	// examples    []string
-	propTypes   []string
-	description string
-	name        string
+	PropTypes   []string
+	Description string
+	Name        string
 }
 
 type Payload struct {
-	properties []PayloadProperty
-	format     string
+	Properties []PayloadProperty
+	Format     string
 }
 
 func (e *Endpoint) RequestBodyPayload() []Payload {
 	payloads := make([]Payload, 0)
 
-	if e.operation.RequestBody == nil {
+	if e.Operation.RequestBody == nil {
 		return payloads
 	}
 
-	for req := e.operation.RequestBody.Content.First(); req != nil; req = req.Next() {
-		payload := Payload{format: req.Key()}
+	for req := e.Operation.RequestBody.Content.First(); req != nil; req = req.Next() {
+		payload := Payload{Format: req.Key()}
 
 		for n := req.Value().Schema.Schema().Properties.First(); n != nil; n = n.Next() {
 			if n.Value().IsReference() {
-				payload.properties = append(payload.properties, PayloadProperty{name: n.Key()})
+				payload.Properties = append(payload.Properties, PayloadProperty{Name: n.Key()})
 			} else {
-				payload.properties = append(payload.properties, PayloadProperty{
+				payload.Properties = append(payload.Properties, PayloadProperty{
 					// TODO: Add extensions and examples
-					propTypes:   n.Value().Schema().Type,
-					description: n.Value().Schema().Description,
-					name:        n.Key(),
+					PropTypes:   n.Value().Schema().Type,
+					Description: n.Value().Schema().Description,
+					Name:        n.Key(),
 				})
 			}
 		}
@@ -55,13 +55,13 @@ func (e *Endpoint) RequestBodyPayload() []Payload {
 	return payloads
 }
 
-type Openapi struct {
+type Spec struct {
 	docModel     *libopenapi.DocumentModel[v3.Document]
 	endpoints    []Endpoint
 	endpointsLen int
 }
 
-func NewOpenapi(file []byte) *Openapi {
+func New(file []byte) *Spec {
 	document, errDoc := libopenapi.NewDocument(file)
 	if errDoc != nil {
 		panic(fmt.Sprintf("cannot create new document: %e", errDoc))
@@ -86,25 +86,25 @@ func NewOpenapi(file []byte) *Openapi {
 		path := item.Key()
 		for operation := item.Value().GetOperations().First(); operation != nil; operation = operation.Next() {
 			endpoints[i] = Endpoint{
-				path:      path,
-				method:    operation.Key(),
-				operation: operation.Value(),
+				Path:      path,
+				Method:    operation.Key(),
+				Operation: operation.Value(),
 			}
 			i++
 		}
 	}
 
-	return &Openapi{docModel, endpoints, endpointsLen}
+	return &Spec{docModel, endpoints, endpointsLen}
 }
 
-func (o *Openapi) Endpoints() []Endpoint {
+func (o *Spec) Endpoints() []Endpoint {
 	return o.endpoints
 }
 
-func (o *Openapi) EndpointsLen() int {
+func (o *Spec) EndpointsLen() int {
 	return o.endpointsLen
 }
 
-func (o *Openapi) Info() *base.Info {
+func (o *Spec) Info() *base.Info {
 	return o.docModel.Model.Info
 }

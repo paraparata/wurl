@@ -7,6 +7,8 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/paraparata/wurl2/spec"
+	"github.com/paraparata/wurl2/wurl"
 )
 
 var openapiPathFlag = flag.String("file", "", "List paths from an openapi file")
@@ -18,8 +20,8 @@ func main() {
 		log.Fatal("Error occured")
 	}
 
-	api := NewOpenapi(file)
-	wurl := NewWurl(api)
+	api := spec.New(file)
+	wurl := wurl.New(api)
 	p := tea.NewProgram(wurl, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {

@@ -1,4 +1,4 @@
-package main
+package wurl
 
 import (
 	"fmt"
@@ -20,52 +20,6 @@ const (
 	defaultHeight = 0
 )
 
-var (
-	get = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#000000")).
-		Background(lipgloss.Color("#61affe"))
-	pos = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#000000")).
-		Background(lipgloss.Color("#49cc90"))
-	put = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#000000")).
-		Background(lipgloss.Color("#F18F01"))
-	del = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#000000")).
-		Background(lipgloss.Color("#f93e3e"))
-	selectedMethod = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#000000")).
-			Background(lipgloss.AdaptiveColor{Light: "#F793FF", Dark: "#AD58B4"})
-	dimmedInverse = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#000000")).
-			Background(lipgloss.AdaptiveColor{Light: "#A49FA5", Dark: "#777777"})
-)
-
-func epMethodStyle(method string) string {
-	mtd := fmt.Sprintf("[%s]", method)
-	switch method {
-	case "get":
-		return get.Render(mtd)
-	case "post":
-		return pos.Render(mtd)
-	case "put", "patch":
-		return put.Render(mtd)
-	case "delete":
-		return del.Render(mtd)
-	}
-
-	return mtd
-}
-
-// TODO: Styleize the method
-func titleize(method, path string) string {
-	return method + " " + path
-}
-
 type itemDelegate struct {
 	list.DefaultDelegate
 }
@@ -77,7 +31,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 		s            = &d.Styles
 	)
 
-	if i, ok := item.(Endpoint); ok {
+	if i, ok := item.(listItemModel); ok {
 		title = i.Title()
 		desc = i.Description()
 	} else {
