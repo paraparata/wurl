@@ -18,12 +18,9 @@ func main() {
 		log.Fatal("Error occured")
 	}
 
-	data := NewOpenapi(file)
-	dataTitle, _, _ := data.Info()
-	title := "🚧wurl | " + dataTitle
-
-	uiModel := NewEndpointList(title, data.EndpointsLen(), data.Endpoints())
-	p := tea.NewProgram(uiModel, tea.WithAltScreen())
+	api := NewOpenapi(file)
+	wurl := NewWurl(api)
+	p := tea.NewProgram(wurl, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running program:", err)

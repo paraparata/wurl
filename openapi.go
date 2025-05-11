@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pb33f/libopenapi"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 )
 
@@ -11,6 +12,47 @@ type Endpoint struct {
 	path      string
 	method    string
 	operation *v3.Operation
+}
+
+type PayloadProperty struct {
+	// TODO: Add extensions and examples
+	// examples    []string
+	propTypes   []string
+	description string
+	name        string
+}
+
+type Payload struct {
+	properties []PayloadProperty
+	format     string
+}
+
+func (e *Endpoint) RequestBodyPayload() []Payload {
+	payloads := make([]Payload, 0)
+
+	if e.operation.RequestBody == nil {
+		return payloads
+	}
+
+	for req := e.operation.RequestBody.Content.First(); req != nil; req = req.Next() {
+		payload := Payload{format: req.Key()}
+
+		for n := req.Value().Schema.Schema().Properties.First(); n != nil; n = n.Next() {
+			if n.Value().IsReference() {
+				payload.properties = append(payload.properties, PayloadProperty{name: n.Key()})
+			} else {
+				payload.properties = append(payload.properties, PayloadProperty{
+					// TODO: Add extensions and examples
+					propTypes:   n.Value().Schema().Type,
+					description: n.Value().Schema().Description,
+					name:        n.Key(),
+				})
+			}
+		}
+		payloads = append(payloads, payload)
+	}
+
+	return payloads
 }
 
 type Openapi struct {
@@ -63,6 +105,6 @@ func (o *Openapi) EndpointsLen() int {
 	return o.endpointsLen
 }
 
-func (o *Openapi) Info() (string, string, string) {
-	return o.docModel.Model.Info.Title, o.docModel.Model.Info.Description, o.docModel.Model.Info.Summary
+func (o *Openapi) Info() *base.Info {
+	return o.docModel.Model.Info
 }
