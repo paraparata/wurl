@@ -1,14 +1,18 @@
 package wurl
 
 import (
+	"github.com/charmbracelet/bubbles/help"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/paraparata/wurl/spec"
 	"github.com/paraparata/wurl/styles"
 )
 
 func New(api *spec.Spec) *model {
-	m := model{spec: api}
+	// TODO: add help for endpoint detail view
+	m := model{spec: api, help: help.New()}
+	m.help.ShowAll = false
 	m.list = newEndpointList(api)
+	m.list.Help = m.help
 	m.viewport = newEndpointDetail()
 
 	return &m

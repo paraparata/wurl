@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/paraparata/wurl/spec"
@@ -13,7 +14,9 @@ type model struct {
 	spec       *spec.Spec
 	list       list.Model
 	viewport   viewport.Model
+	help       help.Model
 	activeItem *listItemModel
+	content    string
 	width      int
 	height     int
 }

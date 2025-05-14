@@ -1,6 +1,8 @@
 package wurl
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -14,7 +16,7 @@ func newEndpointList(api *spec.Spec) list.Model {
 	}
 
 	model := list.New(listItems, newItemDelegate(), 0, 0)
-	model.Title = "🚧wurl | " + api.Info().Title
+	model.Title = "🚧wurl | " + fmt.Sprintf("%s (v%s, openapi%s)", api.Info().Title, api.Info().Version, api.OpenapiVersion())
 
 	return model
 }
@@ -26,9 +28,8 @@ func updateEndpointList(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "enter":
 			if i, ok := m.list.SelectedItem().(listItemModel); ok {
 				m.activeItem = &i
-				c := lipgloss.NewStyle().Width(m.width).Render(endpointDetailContent(&i))
-				m.viewport.SetContent(c)
-				// m.viewport.SetContent(c + "\n" + c + "\n" + c + "\n" + c + "\n" + c + "\n" + c + "\n" + c)
+				m.content = lipgloss.NewStyle().Width(m.width).Render(endpointDetailContent(&i))
+				m.viewport.SetContent(m.content)
 			}
 			return m, nil
 		}

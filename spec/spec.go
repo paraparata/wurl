@@ -15,7 +15,7 @@ type Endpoint struct {
 }
 
 type PayloadProperty struct {
-	// TODO: Add extensions and examples
+	// TODO: Add required, extensions and examples
 	// examples    []string
 	PropTypes   []string
 	Description string
@@ -42,7 +42,7 @@ func (e *Endpoint) RequestBodyPayload() []Payload {
 				payload.Properties = append(payload.Properties, PayloadProperty{Name: n.Key()})
 			} else {
 				payload.Properties = append(payload.Properties, PayloadProperty{
-					// TODO: Add extensions and examples
+					// TODO: Add required, extensions and examples
 					PropTypes:   n.Value().Schema().Type,
 					Description: n.Value().Schema().Description,
 					Name:        n.Key(),
@@ -107,4 +107,8 @@ func (o *Spec) EndpointsLen() int {
 
 func (o *Spec) Info() *base.Info {
 	return o.docModel.Model.Info
+}
+
+func (o *Spec) OpenapiVersion() string {
+	return o.docModel.Model.Version
 }
