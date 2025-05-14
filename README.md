@@ -1,4 +1,4 @@
-![demo](https://github.com/user-attachments/assets/150f3dc0-bd20-4ac4-a8f8-0fbc3cdbbc02)
+![demo](https://github.com/user-attachments/assets/150144bf-bd68-44c0-a27d-40b10baa4023)
 
 # 🚧wurl (WIP)
 
